@@ -1,12 +1,31 @@
 #!/usr/bin/env bash
 
-echo -e "\033[01;32m --------------- START -------------------- \033[0m"
-now=`date +'%Y-%m-%d %H:%M:%S'`
-start_time=$(date --date="$now" +%s)
+set -e
 
-#rm -rf BUILD_WASM
-mkdir BUILD_WASM
+echo -e "\033[01;32m --------------- START -------------------- \033[0m"
+
+get_current_time_in_seconds() {
+    local now=$(date +'%Y-%m-%d %H:%M:%S')
+    local total_seconds
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        total_seconds=$(date -j -f "%Y-%m-%d %H:%M:%S" "$now" "+%s")
+    else
+        total_seconds=$(date --date="$now" +%s)
+    fi
+    echo "$total_seconds"
+}
+
+start_time=$(get_current_time_in_seconds)
+
+core_count=$(nproc)
+echo "CPU core count：$core_count"
+
+rm -rf BUILD_WASM
+mkdir -p BUILD_WASM
 cd BUILD_WASM
+
+rm -rf dist
+mkdir dist
 
 # make for debug/release and wasm/asm respectively
 #check if imput parameter is debug
@@ -28,22 +47,17 @@ if [ "$1" = "debug" ]; then
 else
     echo -e "\033[01;32m --------------- Build Release --------------- \033[0m"
     cmake .. -G "Unix Makefiles" -B ./ -DBUILD_WASM=ON -DCMAKE_BUILD_TYPE=release -DCMAKE_TOOLCHAIN_FILE=${EMSCRIPTEN}/cmake/Modules/Platform/Emscripten.cmake
-    make -j 12
-    
-    echo -e "\033[01;32m ---------- Build wasm release DONE ----------  \033[0m"
-    cmake .. -G "Unix Makefiles" -B ./ -DBUILD_WASM=OFF -DCMAKE_BUILD_TYPE=release -DCMAKE_TOOLCHAIN_FILE=${EMSCRIPTEN}/cmake/Modules/Platform/Emscripten.cmake
-    make -j 12
-    echo -e "\033[01;32m ---------- Build  asm release DONE ----------  \033[0m"
+    make -j ${core_count}
 
-    cp -r ./bin/box2d.release.asm.js ../../cocos-engine/native/external/emscripten/box2d
-    cp -r ./bin/box2d.release.wasm.js ../../cocos-engine/native/external/emscripten/box2d
-    cp -r ./bin/box2d.release.wasm.wasm ../../cocos-engine/native/external/emscripten/box2d
+    echo -e "\033[01;32m --------------- Copy --------------- \033[0m"
+
+    cp libbox2d-fat.release.a ../dist/
     
-    echo -e "\033[01;32m ------------ Copy Done --------------  \033[0m"
+    echo -e "\033[01;32m ---------- Build release DONE ----------  \033[0m"
 fi
 
 
-now=`date +'%Y-%m-%d %H:%M:%S'`
-end_time=$(date --date="$now" +%s);
+end_time=$(get_current_time_in_seconds)
+
 echo -e "\033[01;32m Time Used: "$((end_time-start_time))"s  \033[1m"
 echo -e "\033[01;32m ------------- END -----------------  \033[0m"
