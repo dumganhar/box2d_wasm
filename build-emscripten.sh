@@ -20,12 +20,13 @@ start_time=$(get_current_time_in_seconds)
 core_count=$(nproc)
 echo "CPU core count：$core_count"
 
+rm -rf dist
+mkdir dist
+
 rm -rf BUILD_WASM
 mkdir -p BUILD_WASM
 cd BUILD_WASM
 
-rm -rf dist
-mkdir dist
 
 # make for debug/release and wasm/asm respectively
 #check if imput parameter is debug
@@ -51,7 +52,7 @@ else
 
     echo -e "\033[01;32m --------------- Copy --------------- \033[0m"
 
-    cp libbox2d-fat.release.a ../dist/
+    cp ./bin/libbox2d-fat.release.a ../dist/
     
     echo -e "\033[01;32m ---------- Build release DONE ----------  \033[0m"
 fi
