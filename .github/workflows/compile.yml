@@ -62,7 +62,7 @@ jobs:
         if: github.event_name != 'release'
         uses: actions/upload-artifact@v3
         with: 
-          name: libbox2d-fat.zip
+          name: libbox2d-fat
           path: dist
 
       - name: Pack dist files
